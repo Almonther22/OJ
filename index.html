@@ -25,8 +25,65 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             text-align: center;
         }
-        h2 { color: #4a3f35; margin: 0 0 10px 0; font-size: 18px; }
+        h2 { color: #4a3f35; margin: 0 0 15px 0; font-size: 18px; }
         
+        /* زر فتح الكاميرا الرئيسي */
+        .btn-open-camera {
+            width: 100%;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: bold;
+            background-color: #8e6f57;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(142, 111, 87, 0.25);
+            margin-bottom: 15px;
+        }
+
+        /* واجهة الكاميرا كاملة الشاشة */
+        #cameraView {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: black;
+            z-index: 999;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+        }
+        #video {
+            width: 100%;
+            max-height: 70vh;
+            object-fit: cover;
+        }
+        .btn-capture {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            border: 5px solid white;
+            background-color: #e74c3c;
+            cursor: pointer;
+        }
+
+        /* مربع معاينة الصورة بعد الالتقاط */
+        #previewContainer {
+            display: none;
+            background: #faf8f5;
+            padding: 10px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 2px dashed #8e6f57;
+        }
+        #previewCanvas {
+            width: 120px;
+            height: 90px;
+            border-radius: 8px;
+            object-fit: cover;
+            display: inline-block;
+        }
+
         /* شبكة الأرقام */
         .grid-container {
             display: grid;
@@ -35,7 +92,6 @@
             margin-top: 10px;
         }
         
-        /* التصميم الديناميكي للأزرار بناءً على الحالة */
         .number-btn {
             padding: 20px 0;
             font-size: 22px;
@@ -45,52 +101,22 @@
             transition: all 0.2s ease;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             border: 2px solid #e1dacb;
-            background-color: #ffffff; /* الحالة 0: فارغ */
+            background-color: #ffffff;
             color: #5c4b41;
         }
 
-        /* الحالة 1: تم التصوير وجاهز للعرض (أخضر) */
-        .number-btn.ready-to-show {
-            background-color: #2ecc71 !important;
-            color: white !important;
-            border-color: #27ae60 !important;
-        }
-
-        /* الحالة 2: معروض الآن على الشاشة (برتقالي) */
-        .number-btn.showing-now {
-            background-color: #239def !important;
-            color: white !important;
-            border-color: #d35400 !important;
-            animation: pulse 1.5s infinite;
-        }
-
-        /* الحالة 3: مرحلية الإغلاق والمحفوظات (أحمر) */
-        .number-btn.archiving {
-            background-color: #e74c3c !important;
-            color: white !important;
-            border-color: #c0392b !important;
-        }
+        /* الألوان الديناميكية للأزرار */
+        .number-btn.ready-to-show { background-color: #2ecc71 !important; color: white !important; border-color: #27ae60 !important; }
+        .number-btn.showing-now { background-color: #e67e22 !important; color: white !important; border-color: #d35400 !important; animation: pulse 1.5s infinite; }
+        .number-btn.archiving { background-color: #e74c3c !important; color: white !important; border-color: #c0392b !important; }
 
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(0.97); opacity: 0.9; }
             100% { transform: scale(1); }
         }
-
-        /* إخفاء الكاميرا تماماً لجعل التركيز على الأزرار فقط */
-        #video, #canvas { display: none; }
         
-        .legend {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 15px;
-            font-size: 12px;
-            background: #faf8f5;
-            padding: 8px;
-            border-radius: 8px;
-        }
-        .legend-item { display: flex; align-items: center; gap: 5px; }
-        .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+        .instruction { color: #666; font-size: 14px; margin-bottom: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -98,102 +124,140 @@
 <div class="container">
     <h2>لوحة تحكم شاشة المرآة التفاعلية</h2>
     
-    <div class="legend">
-        <div class="legend-item"><span class="dot" style="background: #fff; border:1px solid #ccc;"></span> فارغ</div>
-        <div class="legend-item"><span class="dot" style="background: #2ecc71;"></span> تم التصوير</div>
-        <div class="legend-item"><span class="dot" style="background: #e67e22;"></span> يعرض الآن</div>
+    <button class="btn-open-camera" id="openCameraBtn">📸 تصوير عميل جديد</button>
+
+    <div id="instructionText" class="instruction">اضغط على الزر بالأعلى لتصوير العميل أولاً</div>
+
+    <div id="previewContainer">
+        <canvas id="previewCanvas"></canvas>
+        <div style="font-size: 13px; color: #e74c3c; font-weight: bold; margin-top: 5px;">📍 وين تبي تحفظ الصورة؟ اختر رقم الطلب بالأسفل:</div>
     </div>
-    
-    <video id="video" autoplay playsinline></video>
-    <canvas id="canvas"></canvas>
 
     <div class="grid-container" id="numbersGrid"></div>
 </div>
 
+<div id="cameraView">
+    <div style="color: white; font-size: 18px;">وجه الكاميرا نحو العميل</div>
+    <video id="video" autoplay playsinline></video>
+    <button class="btn-capture" id="captureBtn"></button>
+    <div style="color: white; font-size: 14px; margin-bottom: 10px;">اضغط على الزر الأحمر للالتقاط</div>
+</div>
+
 <script>
-    const FIRE_STICK_IP = "192.168.1.100"; // الـ IP الثابت للفاير ستيك
+    // تأكد من مطابقة الـ IP الفعلي لجهاز الفاير ستيك في المحل
+    const FIRE_STICK_IP = "192.168.1.100"; 
     const PORT = "8080";
 
     const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
+    const previewCanvas = document.getElementById('previewCanvas');
+    const cameraView = document.getElementById('cameraView');
+    const openCameraBtn = document.getElementById('openCameraBtn');
+    const captureBtn = document.getElementById('captureBtn');
+    const previewContainer = document.getElementById('previewContainer');
+    const instructionText = document.getElementById('instructionText');
     const numbersGrid = document.getElementById('numbersGrid');
 
-    // كائن لتخزين حالات الأرقام والصور محلياً في الآيفون
-    // الحالة 0 = فارغ، 1 = التقطت الصورة، 2 = تعرض الآن
     let ordersState = {}; 
-    let archivedOrders = []; // ملف المحفوظات
+    let archivedOrders = []; 
+    let tempImageBase64 = null; // تخزين مؤقت للصورة حتى يختار الكاشير رقم الحفظ
 
-    // تشغيل الكاميرا الخلفية في الخلفية صامتة وبدون عرض
-    navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: "environment", width: 1280, height: 720 }, 
-        audio: false 
-    }).then(stream => { video.srcObject = stream; }).catch(err => { console.error("صلاحية الكاميرا مطلوبة"); });
-
-    // توليد الأزرار العشرين وإدارة ضغطاتها
+    // 1. إنشاء الأزرار العشرين مسبقاً بحالتها الافتراضية (بيضاء)
     for (let i = 1; i <= 20; i++) {
-        ordersState[i] = { state: 0, image: null }; // تهيئة كل الأرقام على الحالة 0
-
+        ordersState[i] = { state: 0, image: null };
         const btn = document.createElement('button');
         btn.className = 'number-btn';
         btn.id = `btn-${i}`;
         btn.innerText = i;
-        
-        btn.addEventListener('click', () => handleButtonClick(i, btn));
+        btn.addEventListener('click', () => handleNumberClick(i, btn));
         numbersGrid.appendChild(btn);
     }
 
-    // إدارة منطق الضغطات المتتالية وتغير الألوان
-    function handleButtonClick(orderNumber, btn) {
+    // 2. فتح الكاميرا بملء الشاشة عند الضغط على زر التصوير الرئيسي
+    openCameraBtn.addEventListener('click', () => {
+        cameraView.style.display = 'flex';
+        navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: "environment", width: 1280, height: 720 }, 
+            audio: false 
+        }).then(stream => { video.srcObject = stream; }).catch(err => { alert("يرجى تفعيل صلاحية الكاميرا في المتصفح"); });
+    });
+
+    // 3. التقاط الصورة وإغلاق الكاميرا تلقائياً والعودة للرئيسية للسؤال عن الرقم
+    captureBtn.addEventListener('click', () => {
+        const context = previewCanvas.getContext('2d');
+        previewCanvas.width = video.videoWidth;
+        previewCanvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, previewCanvas.width, previewCanvas.height);
+        
+        // حفظ الصورة مؤقتاً بصيغة مشفرة ومضغوطة
+        tempImageBase64 = previewCanvas.toDataURL('image/jpeg', 0.65);
+
+        // إيقاف بث الكاميرا تماماً وإخفاء واجهتها
+        if (video.srcObject) {
+            video.srcObject.getTracks().forEach(track => track.stop());
+        }
+        cameraView.style.display = 'none';
+
+        // إظهار مربع المعاينة وتحديث النص للسؤال عن رقم الحفظ
+        previewContainer.style.display = 'block';
+        instructionText.innerText = "يرجى تحديد الرقم لحفظ الصورة الملتقطة فيه.";
+    });
+
+    // 4. معالجة الضغط على الأرقام بناءً على تدفق النظام
+    function handleNumberClick(orderNumber, btn) {
         let currentOrder = ordersState[orderNumber];
 
-        // [الضغط الأول]: الزر أبيض -> يصور ويتحول لأخضر
-        if (currentOrder.state === 0) {
-            const context = canvas.getContext('2d');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            currentOrder.image = canvas.toDataURL('image/jpeg', 0.65);
+        // [حالة الحفظ]: إذا التقطنا صورة وننتظر تحديد رقم لها
+        if (tempImageBase64 !== null) {
+            if (currentOrder.state === 2) {
+                alert(`الطلب ${orderNumber} يعرض حالياً، يرجى إغلاقه أولاً قبل استبداله.`);
+                return;
+            }
+
+            // ربط الصورة بالرقم المختار وتحويله للأخضر
+            currentOrder.image = tempImageBase64;
             currentOrder.state = 1;
-            
             btn.className = 'number-btn ready-to-show';
-            console.log(`الطلب ${orderNumber}: تم التقاط الصورة وهو جاهز للعرض.`);
+
+            // إنهاء حالة الحفظ وإخفاء المعاينة المؤقتة
+            tempImageBase64 = null;
+            previewContainer.style.display = 'none';
+            instructionText.innerText = `تم حفظ الصورة في رقم ${orderNumber} بنجاح. اضغط عليه لبدء العرض على الشاشة.`;
+            return;
         }
-        
-        // [الضغط الثاني]: الزر أخضر -> يرسل للشاشة ويتحول لبرتقالي (عرض مستمر)
+
+        // [حالة التحكم بالعرض]: التفاعل العادي مع الأزرار العشرين
+        if (currentOrder.state === 0) {
+            alert("لا توجد صورة محفوظة لهذا الرقم. اضغط على زر التصوير بالأعلى أولاً.");
+        } 
         else if (currentOrder.state === 1) {
+            // الضغط الأول (أخضر): يبدأ العرض على التلفزيون ويتحول لبرتقالي
             currentOrder.state = 2;
             btn.className = 'number-btn showing-now';
-            
-            // إرسال أمر بدء العرض المستمر للشاشة
+            instructionText.innerText = `يتم الآن عرض طلب رقم (${orderNumber}) بشكل مستمر...`;
             sendToDisplay(orderNumber, currentOrder.image, 'START_DISPLAY');
-        }
-        
-        // [الضغط الثالث]: الزر برتقالي -> يختفي من الشاشة، يتحول لأحمر مؤقتاً، يذهب للمحفوظات، ويعود أبيض
+        } 
         else if (currentOrder.state === 2) {
+            // الضغط الثاني (برتقالي): يغلق العرض، ويتحول لأحمر مؤقتاً، ثم يؤرشف الصورة ويعود أبيض
             btn.className = 'number-btn archiving';
-            
-            // إرسال أمر إيقاف العرض للشاشة للعودة لوضع المرآة
+            instructionText.innerText = "جاري إغلاق العرض على الشاشة ونقل البيانات للمحفوظات...";
             sendToDisplay(orderNumber, null, 'STOP_DISPLAY');
 
-            // نقل البيانات لملف المحفوظات
             archivedOrders.push({
                 orderId: orderNumber,
                 image: currentOrder.image,
                 timestamp: new Date().toLocaleTimeString()
             });
 
-            // إعادة تصفير الزر بعد ثانية واحدة (تأثير اللون الأحمر)
             setTimeout(() => {
                 currentOrder.state = 0;
                 currentOrder.image = null;
                 btn.className = 'number-btn';
-                console.log(`الطلب ${orderNumber}: تمت إزالته ونقله للمحفوظات.`);
+                instructionText.innerText = "جاهز لتصوير عميل جديد.";
             }, 1000);
         }
     }
 
-    // دالة الإرسال المباشر للفاير ستيك
+    // دالة إرسال الطلبات المباشرة للفاير ستيك عبر الشبكة المحلية
     function sendToDisplay(orderId, imageBase64, action) {
         fetch(`http://${FIRE_STICK_IP}:${PORT}/api/mirror-control`, {
             method: 'POST',
@@ -201,10 +265,11 @@
             body: JSON.stringify({
                 orderId: orderId,
                 imageBase64: imageBase64,
-                action: action // 'START_DISPLAY' أو 'STOP_DISPLAY'
+                action: action
             })
-        })
-        .catch(err => console.error("خطأ في الاتصال بالشاشة:", err));
+        }).catch(err => {
+            instructionText.innerText = "⚠️ خطأ اتصال! تأكد أن الشاشة متصلة بنفس الـ Wi-Fi.";
+        });
     }
 </script>
 
